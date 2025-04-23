@@ -13,17 +13,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Debug Key (nur temporär!)
+        run: |
+          echo "Key preview:"
+          head -n 5 ~/.ssh/id_rsa
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
-
-      - name: Debug Key (nur temporär!)
-        run: |
-          echo "Key preview:"
-          head -n 5 ~/.ssh/id_rsa
 
       - name: Deploy to EC2
         run: |
