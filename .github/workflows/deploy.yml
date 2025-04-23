@@ -20,6 +20,11 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
 
+      - name: Debug Key (nur temporär!)
+        run: |
+          echo "Key preview:"
+          head -n 5 ~/.ssh/id_rsa
+
       - name: Deploy to EC2
         run: |
           ssh -i ~/.ssh/id_rsa ubuntu@54.171.228.69 "
