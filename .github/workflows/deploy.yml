@@ -1,0 +1,31 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main # oder dein Deployment-Branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H YOUR.EC2.IP >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@54.171.228.69 "
+            cd finance-dashboard &&
+            git pull &&
+            source streamlit_env/bin/activate &&
+            pkill streamlit || true &&
+            nohup streamlit run app.py --server.port 8501 --server.enableCORS false > out.log 2>&1 &
+          "
