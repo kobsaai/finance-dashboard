@@ -67,7 +67,7 @@ def load_transactions(file):
         st.write(df_complete.columns)
 
 
-        return categorize_transactions(df_complete).iloc[:, [0,1,4,5,3,7,2]]
+        return categorize_transactions(df_complete).iloc[:, [0,1,4,5,3,7]]
         #return df_reordered
     except Exception as e:
         st.error(f"Error processing file: {str(e)}")
