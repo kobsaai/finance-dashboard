@@ -1,37 +1,12 @@
-name: Deploy to EC2
+name: Test Base64 Decode
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up SSH from base64 secret
+      - name: Decode Test
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          echo "Host ec2-server
-            HostName 54.171.228.69
-            User ubuntu
-            IdentityFile ~/.ssh/id_rsa
-            StrictHostKeyChecking no" > ~/.ssh/config
-          chmod 600 ~/.ssh/config
-          ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
-
-      - name: Deploy to EC2
-        run: |
-          ssh ec2-server "
-            cd finance-dashboard &&
-            git pull &&
-            source streamlit_env/bin/activate &&
-            pkill streamlit || true &&
-            nohup streamlit run app.py --server.port 8501 --server.enableCORS false > out.log 2>&1 &
-          "
+          echo "aGVsbG8gd29ybGQK" | base64 -d
