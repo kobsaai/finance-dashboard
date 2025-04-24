@@ -1,25 +1,14 @@
-name: Deploy to EC2
+name: Test SSH Key Injection
 
-on:
-  push:
-    branches:
-      - main # Passe den Branch ggf. an
+on: workflow_dispatch
 
 jobs:
-  deploy:
+  test-ssh:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup SSH
+      - name: Inject SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
-
-      - name: Deploy to EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@54.171.228.69 'cd /home/ubuntu/app && git pull && npm install && npm run build'
+          echo "SSH key saved!"
