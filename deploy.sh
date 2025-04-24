@@ -19,7 +19,9 @@ fi
 source $VENV_DIR/bin/activate
 
 echo "Installing/updating dependencies..."
-pip install -r requirements.txt
+if [ -f requirements.txt ]; then
+    pip install -r requirements.txt
+fi
 
 echo "Restarting Streamlit app..."
 # Kill any existing Streamlit process
