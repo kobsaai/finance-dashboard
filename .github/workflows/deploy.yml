@@ -1,26 +1,21 @@
-name: Test Base64 Decode
+name: Deploy to EC2
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main] # oder master, je nach deinem Setup
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup SSH Key
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-          echo "Host ec2-server
-            HostName 54.171.228.69
-            User ubuntu
-            IdentityFile ~/.ssh/id_rsa
-            StrictHostKeyChecking no" > ~/.ssh/config
-          chmod 600 ~/.ssh/config
-
-          ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no ubuntu@deine-ec2-ip.amazonaws.com 'bash -s' < deploy.sh
