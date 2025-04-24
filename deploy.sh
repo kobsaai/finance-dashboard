@@ -28,6 +28,6 @@ echo "Restarting Streamlit app..."
 pkill -f streamlit || true
 
 # Start Streamlit in a new tmux session
-tmux new-session -d -s streamlit_app "cd $REPO_DIR && source $VENV_DIR/bin/activate && streamlit run $STREAMLIT_APP_FILE"
+tmux new-session -d -s streamlit_app "cd $REPO_DIR && source $VENV_DIR/bin/activate && streamlit run $STREAMLIT_APP_FILE >> streamlit.log 2>&1"
 
 echo "Deployment completed successfully!"
