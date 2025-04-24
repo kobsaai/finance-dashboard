@@ -3,34 +3,23 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main # oder dein Deployment-Branch
+      - main # Passe den Branch ggf. an
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Debug Key (nur temporär!)
-        run: |
-          echo "Key preview:"
-          head -n 5 .ssh/github-deploy
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' | awk '{print $0}' RS='\\n' ORS='\n' > ~/.ssh/github-deploy
-          chmod 600 ~/.ssh/github-deploy
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/github-deploy ubuntu@54.171.228.69 "
-            cd finance-dashboard &&
-            git pull &&
-            source streamlit_env/bin/activate &&
-            pkill streamlit || true &&
-            nohup streamlit run app.py --server.port 8501 --server.enableCORS false > out.log 2>&1 &
-          "
+          ssh -i ~/.ssh/id_rsa ubuntu@54.171.228.69 'cd /home/ubuntu/app && git pull && npm install && npm run build'
