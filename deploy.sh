@@ -1,33 +1,34 @@
 #!/bin/bash
 set -e
 
-REPO_DIR="finance-dashboard"  # Passe diesen Pfad an
-STREAMLIT_APP_FILE="main.py"  # Anpassen an deinen Dateinamen
+REPO_DIR="/home/ubuntu/finance-dashboard"
+STREAMLIT_APP_FILE="main.py"
 VENV_DIR="$REPO_DIR/streamlit_venv"
+LOGFILE="$REPO_DIR/streamlit.log"
 
-echo "Pulling latest changes from GitHub..."
+echo "[$(date)] Pulling latest changes..." >> $LOGFILE
 cd $REPO_DIR
-git pull origin main
+git pull origin main >> $LOGFILE 2>&1
 
 # Virtuelle Umgebung erstellen, falls nicht vorhanden
 if [ ! -d "$VENV_DIR" ]; then
-    echo "Creating virtual environment..."
+    echo "[$(date)] Creating virtual environment..." >> $LOGFILE
     python3 -m venv $VENV_DIR
 fi
 
-# Aktiviere virtuelle Umgebung
+# Abhängigkeiten installieren
 source $VENV_DIR/bin/activate
-
-echo "Installing/updating dependencies..."
+echo "[$(date)] Installing dependencies..." >> $LOGFILE
+pip install --upgrade pip >> $LOGFILE 2>&1
 if [ -f requirements.txt ]; then
-    pip install -r requirements.txt
+    pip install -r requirements.txt >> $LOGFILE 2>&1
 fi
 
-echo "Restarting Streamlit app..."
-# Kill any existing Streamlit process
-pkill -f streamlit || true
+# Vorherige tmux-Session beenden, falls sie existiert
+if tmux has-session -t streamlit_app 2>/dev/null; then
+    tmux kill-session -t streamlit_app
+fi
 
-# Start Streamlit in a new tmux session
-tmux new-session -d -s streamlit_app "cd $REPO_DIR && source $VENV_DIR/bin/activate && streamlit run $STREAMLIT_APP_FILE >> streamlit.log 2>&1"
-
-echo "Deployment completed successfully!"
+# Neue tmux-Session starten
+echo "[$(date)] Starting Streamlit in tmux..." >> $LOGFILE
+tmux new-session -d -s streamlit_app "cd $REPO_DIR && source $VENV_DIR/bin/activate && streamlit run $STREAMLIT_APP_FILE >> $LOGFILE 2>&1"
