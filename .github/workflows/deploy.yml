@@ -4,9 +4,23 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Decode Test
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
         run: |
-          echo "aGVsbG8gd29ybGQK" | base64 -d
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          echo "Host ec2-server
+            HostName 54.171.228.69
+            User ubuntu
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking no" > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+          ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
