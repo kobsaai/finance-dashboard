@@ -16,7 +16,7 @@ jobs:
       - name: Debug Key (nur temporär!)
         run: |
           echo "Key preview:"
-          head -n 5 ~/.ssh/github-deploy
+          head -n 5 .ssh/github-deploy
 
       - name: Setup SSH
         run: |
