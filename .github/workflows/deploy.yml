@@ -16,18 +16,18 @@ jobs:
       - name: Debug Key (nur temporär!)
         run: |
           echo "Key preview:"
-          head -n 5 ~/.ssh/id_rsa
+          head -n 5 ~/.ssh/github-deploy
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' | awk '{print $0}' RS='\\n' ORS='\n' > ~/.ssh/github-deploy
+          chmod 600 ~/.ssh/github-deploy
           ssh-keyscan -H 54.171.228.69 >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@54.171.228.69 "
+          ssh -i ~/.ssh/github-deploy ubuntu@54.171.228.69 "
             cd finance-dashboard &&
             git pull &&
             source streamlit_env/bin/activate &&
