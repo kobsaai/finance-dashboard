@@ -76,7 +76,12 @@ def load_transactions(file):
 def main():
     st.title("Finance Dashboard")
 
-    uploaded_file= st.file_uploader("Upload your finance CSV file", type=["csv"])
+    uploaded_file= st.file_uploader("Upload your finance CSV file from comdirect bank", type=["csv"])
+    dummy_button = st.button("Use Dummy Data")
+
+    if dummy_button:
+        uploaded_file="dummy\dummy_umsätze.csv"
+
 
     if uploaded_file is not None:
         df = load_transactions(uploaded_file)
@@ -86,6 +91,7 @@ def main():
             expenses_df = df[df["Type"] == "Ausgabe"]
 
             st.session_state.income_df = income_df.copy()
+            st.session_state.expenses_df = expenses_df.copy()
 
             tab1, tab2 = st.tabs(["Einnahmen", "Ausgaben"])
             with tab1:
@@ -117,7 +123,7 @@ def main():
                 if save_button:
                     for idx, row in edited_df.iterrows():
                         new_category = row["Category"]
-                        if new_category == st.session_state.income_df.at[idx, "Category"]:
+                        if new_category == st.session_state.expenses_df.at[idx, "Category"]:
                             continue
 
                         details = row["Wer"]
@@ -138,6 +144,52 @@ def main():
                              )
                         
             with tab2:
-                st.write(expenses_df)
+                new_category = st.text_input("New Category Name", key="New Category Name 2")
+                add_button = st.button("Add Category", key="Add Category 2")
+
+                if add_button and new_category:
+                    if new_category not in st.session_state.categories:
+                        st.session_state.categories[new_category] = []
+                        save_categories()
+                        st.rerun()
+                st.subheader("Deine Einnahmen")
+                edited_df = st.data_editor(
+                    st.session_state.expenses_df,
+                    column_config={
+                        "Buchungstag": st.column_config.DateColumn("Buchungstag", format="DD/MM/YYYY"),
+                        "Umsatz in EUR": st.column_config.NumberColumn("Umsatz in EUR", format="%.2f €"),
+                        "Category": st.column_config.SelectboxColumn(
+                            "Category",
+                            options=list(st.session_state.categories.keys())
+                        )
+                    },
+                    hide_index=True,
+                    use_container_width=True,
+                    key="category_editor 2"
+                )
+
+                save_button = st.button("Apply Changes", type="primary", key="Apply Changes 2")
+                if save_button:
+                    for idx, row in edited_df.iterrows():
+                        new_category = row["Category"]
+                        if new_category == st.session_state.expenses_df.at[idx, "Category"]:
+                            continue
+
+                        details = row["Wer"]
+                        st.session_state.expenses_df.at[idx, "Category]"] = new_category
+                        add_keyword_to_category(new_category, details)
+
+                st.subheader("Zusammenfassung Einnahmen")
+                category_totals = st.session_state.expenses_df.groupby("Category")["Umsatz in EUR"].sum().reset_index()
+                category_totals = category_totals.sort_values("Umsatz in EUR", ascending=False)
+
+                st.dataframe(
+                    category_totals,
+                    column_config={
+                        "Umsatz in EUR": st.column_config.NumberColumn("Umsatz in EUR", format="%.2f €")
+                    },
+                    use_container_width=True,
+                    hide_index=True
+                             )
 
 main()
