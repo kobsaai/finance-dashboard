@@ -80,7 +80,8 @@ def main():
     dummy_button = st.button("Use Dummy Data")
 
     if dummy_button:
-        uploaded_file="dummy\dummy_umsätze.csv"
+        base_dir = os.path.dirname(__file__)  # Pfad zu deinem aktuellen Python-Skript
+        uploaded_file = os.path.join(base_dir, "dummy", "dummy_umsätze.csv")
 
 
     if uploaded_file is not None:
