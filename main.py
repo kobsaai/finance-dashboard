@@ -63,8 +63,6 @@ def load_transactions(file):
         df["Type"] = np.where(df["Umsatz in EUR"] < 0, "Ausgabe", "Einnahme")
         df_parsed = df["Buchungstext"].fillna("").apply(parse_transaction).apply(pd.Series)
         df_complete = pd.concat([df, df_parsed], axis=1)
-        df_reordered = df_complete.iloc[:, [0,1,4,5,3,2]]
-        st.write(df_complete.columns)
 
 
         return categorize_transactions(df_complete).iloc[:, [0,1,4,5,3,7]]
@@ -124,6 +122,7 @@ def main():
     if st.session_state.get("uploaded_file") is not None:
         if st.session_state.get("file_loaded"):
             df = load_transactions(st.session_state.uploaded_file)
+            st.session_state.base_df = df
 
 
             if df is not None:
@@ -136,11 +135,9 @@ def main():
                 delete_button = st.button("Kategorien Löschen")
 
                 if delete_button:
-                    # Datei löschen
                     if os.path.exists("categories.json"):
                         os.remove("categories.json")
                         st.success("Die Kategorien wurden erfolgreich gelöscht!")
-                        # Optional: Auch die SessionState leeren
                         del st.session_state.categories
                         st.rerun()
                     else:
@@ -209,4 +206,39 @@ def main():
                     st.rerun()  
                     st.success("Alle Änderungen wurden übernommen!")
 
+                st.subheader("Summary")
+                category_totals = st.session_state.base_df.groupby("Category")["Umsatz in EUR"].sum().reset_index()
+                category_totals = category_totals.sort_values("Umsatz in EUR", ascending=False)
+                category_totals_inc = st.session_state.income_df.groupby("Category")["Umsatz in EUR"].sum().reset_index()
+                category_totals_exp = st.session_state.expenses_df.groupby("Category")["Umsatz in EUR"].sum().reset_index()
+                category_totals_exp["Umsatz in EUR"] = category_totals_exp["Umsatz in EUR"].abs()
+
+                st.dataframe(
+                    category_totals,
+                    column_config={
+                        "Umsatz in EUR": st.column_config.NumberColumn("Umsatz in EUR", format="%.2f €")
+                        },
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                fig_inc = px.pie(
+                    category_totals_inc,
+                    values="Umsatz in EUR",
+                    names="Category",
+                    title="Einnahmen pro Kategorie"
+                )
+                fig_exp = px.pie(
+                    category_totals_exp,
+                    values="Umsatz in EUR",
+                    names="Category",
+                    title="Ausgaben pro Kategorie"
+                )
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.plotly_chart(fig_inc, use_container_width=True)
+
+                with col2:
+                    st.plotly_chart(fig_exp, use_container_width=True)
 main()
