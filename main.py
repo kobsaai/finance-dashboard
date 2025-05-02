@@ -50,7 +50,10 @@ def add_keyword_to_category(category, keyword):
 
 def load_transactions(file):
     try:
-        df = pd.read_csv(file, encoding="latin1", sep=";", skiprows=3)
+        try:
+            df = pd.read_csv(file, encoding="utf-8-sig", sep=";", skiprows=3)
+        except UnicodeDecodeError:
+            df = pd.read_csv(file, encoding="latin1", sep=";", skiprows=3)
         df.columns = [col.strip() for col in df.columns]
         df = df.rename(columns={"Unnamed: 5" : "Type"})
         df.drop("Wertstellung (Valuta)", axis="columns", inplace=True)
